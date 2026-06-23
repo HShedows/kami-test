@@ -56,11 +56,15 @@ internal fun LibraryComfortableGrid(
     }
 
     if (pagedBrowsing) {
+        // Same cover math as compact grid, plus the title block rendered
+        // below the cover: ~2 lines at 18sp line-height (~36.dp) + 8.dp of
+        // padding (4.dp top/bottom) = ~44.dp, on top of the 8.dp from
+        // GridItemSelectable's own padding.
         PagedLibraryGrid(
             items = items,
             columns = columns,
-            rowHeight = 230.dp,
             contentPadding = contentPadding,
+            cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) + 8.dp + 44.dp },
             cell = cell,
         )
         return

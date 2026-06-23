@@ -57,11 +57,15 @@ internal fun LibraryCompactGrid(
     }
 
     if (pagedBrowsing) {
+        // Cover keeps a fixed 2:3 width:height ratio (MangaCover.Book.ratio),
+        // so cover height = cover width * 1.5. GridItemSelectable adds 4.dp
+        // padding on all sides (8.dp total vertical). The compact layout has
+        // no extra space below the cover — the title overlays the cover.
         PagedLibraryGrid(
             items = items,
             columns = columns,
-            rowHeight = if (showTitle) 200.dp else 160.dp,
             contentPadding = contentPadding,
+            cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) + 8.dp },
             cell = cell,
         )
         return

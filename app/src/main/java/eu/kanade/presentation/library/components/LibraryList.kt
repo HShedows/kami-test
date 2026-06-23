@@ -56,11 +56,13 @@ internal fun LibraryList(
     }
 
     if (pagedBrowsing) {
+        // MangaListItem has an explicit fixed height(56.dp), so this is
+        // exact rather than estimated.
         PagedLibraryGrid(
             items = items,
             columns = 1,
-            rowHeight = 96.dp,
             contentPadding = contentPadding,
+            cellHeightForWidth = { 56.dp },
             cell = cell,
         )
         return
