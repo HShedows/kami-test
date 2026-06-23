@@ -185,6 +185,7 @@ data object LibraryTab : Tab {
                         currentPage = state.coercedActiveCategoryIndex,
                         hasActiveFilters = state.hasActiveFilters,
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
+                        pagedBrowsing = state.pagedBrowsing,
                         onChangeCurrentPage = screenModel::updateActiveCategoryIndex,
                         onClickManga = { navigator.push(MangaScreen(it)) },
                         onContinueReadingClicked = { it: LibraryManga ->

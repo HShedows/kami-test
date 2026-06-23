@@ -143,13 +143,15 @@ class LibraryScreenModel(
             libraryPreferences.categoryTabs.changes(),
             libraryPreferences.categoryNumberOfItems.changes(),
             libraryPreferences.showContinueReadingButton.changes(),
-        ) { a, b, c -> arrayOf(a, b, c) }
-            .onEach { (showCategoryTabs, showMangaCount, showMangaContinueButton) ->
+            libraryPreferences.pagedLibraryBrowsing.changes(),
+        ) { a, b, c, d -> arrayOf(a, b, c, d) }
+            .onEach { (showCategoryTabs, showMangaCount, showMangaContinueButton, pagedBrowsing) ->
                 mutableState.update { state ->
                     state.copy(
                         showCategoryTabs = showCategoryTabs,
                         showMangaCount = showMangaCount,
                         showMangaContinueButton = showMangaContinueButton,
+                        pagedBrowsing = pagedBrowsing,
                     )
                 }
             }
@@ -769,6 +771,7 @@ class LibraryScreenModel(
         val showCategoryTabs: Boolean = false,
         val showMangaCount: Boolean = false,
         val showMangaContinueButton: Boolean = false,
+        val pagedBrowsing: Boolean = false,
         val dialog: Dialog? = null,
         val libraryData: LibraryData = LibraryData(),
         private val activeCategoryIndex: Int = 0,

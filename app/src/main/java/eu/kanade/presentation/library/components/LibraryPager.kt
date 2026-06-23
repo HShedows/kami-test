@@ -32,6 +32,7 @@ fun LibraryPager(
     state: PagerState,
     contentPadding: PaddingValues,
     hasActiveFilters: Boolean,
+    pagedBrowsing: Boolean,
     selection: Set<Long>,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
@@ -82,6 +83,7 @@ fun LibraryPager(
             LibraryDisplayMode.List -> {
                 LibraryList(
                     items = items,
+                    pagedBrowsing = pagedBrowsing,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,
@@ -96,6 +98,7 @@ fun LibraryPager(
                     items = items,
                     showTitle = displayMode is LibraryDisplayMode.CompactGrid,
                     columns = columns,
+                    pagedBrowsing = pagedBrowsing,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,
@@ -109,6 +112,7 @@ fun LibraryPager(
                 LibraryComfortableGrid(
                     items = items,
                     columns = columns,
+                    pagedBrowsing = pagedBrowsing,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,

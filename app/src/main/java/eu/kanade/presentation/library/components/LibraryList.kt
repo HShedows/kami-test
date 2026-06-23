@@ -16,6 +16,7 @@ import tachiyomi.presentation.core.util.plus
 @Composable
 internal fun LibraryList(
     items: List<LibraryItem>,
+    pagedBrowsing: Boolean,
     contentPadding: PaddingValues,
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
@@ -24,6 +25,47 @@ internal fun LibraryList(
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
 ) {
+    val cell: @Composable (LibraryItem) -> Unit = { libraryItem ->
+        val manga = libraryItem.libraryManga.manga
+        MangaListItem(
+            isSelected = manga.id in selection,
+            title = manga.title,
+            coverData = MangaCover(
+                mangaId = manga.id,
+                sourceId = manga.source,
+                isMangaFavorite = manga.favorite,
+                url = manga.thumbnailUrl,
+                lastModified = manga.coverLastModified,
+            ),
+            badge = {
+                DownloadsBadge(count = libraryItem.badges.downloadCount)
+                UnreadBadge(count = libraryItem.badges.unreadCount)
+                LanguageBadge(
+                    isLocal = libraryItem.badges.isLocal,
+                    sourceLanguage = libraryItem.badges.sourceLanguage,
+                )
+            },
+            onLongClick = { onLongClick(libraryItem.libraryManga) },
+            onClick = { onClick(libraryItem.libraryManga) },
+            onClickContinueReading = if (onClickContinueReading != null && libraryItem.unreadCount > 0) {
+                { onClickContinueReading(libraryItem.libraryManga) }
+            } else {
+                null
+            },
+        )
+    }
+
+    if (pagedBrowsing) {
+        PagedLibraryGrid(
+            items = items,
+            columns = 1,
+            rowHeight = 96.dp,
+            contentPadding = contentPadding,
+            cell = cell,
+        )
+        return
+    }
+
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
@@ -41,34 +83,6 @@ internal fun LibraryList(
         items(
             items = items,
             contentType = { "library_list_item" },
-        ) { libraryItem ->
-            val manga = libraryItem.libraryManga.manga
-            MangaListItem(
-                isSelected = manga.id in selection,
-                title = manga.title,
-                coverData = MangaCover(
-                    mangaId = manga.id,
-                    sourceId = manga.source,
-                    isMangaFavorite = manga.favorite,
-                    url = manga.thumbnailUrl,
-                    lastModified = manga.coverLastModified,
-                ),
-                badge = {
-                    DownloadsBadge(count = libraryItem.badges.downloadCount)
-                    UnreadBadge(count = libraryItem.badges.unreadCount)
-                    LanguageBadge(
-                        isLocal = libraryItem.badges.isLocal,
-                        sourceLanguage = libraryItem.badges.sourceLanguage,
-                    )
-                },
-                onLongClick = { onLongClick(libraryItem.libraryManga) },
-                onClick = { onClick(libraryItem.libraryManga) },
-                onClickContinueReading = if (onClickContinueReading != null && libraryItem.unreadCount > 0) {
-                    { onClickContinueReading(libraryItem.libraryManga) }
-                } else {
-                    null
-                },
-            )
-        }
+        ) { libraryItem -> cell(libraryItem) }
     }
 }

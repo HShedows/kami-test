@@ -132,6 +132,8 @@ class LibraryPreferences(
 
     val categorizedDisplaySettings: Preference<Boolean> = preferenceStore.getBoolean("categorized_display", false)
 
+    val pagedLibraryBrowsing: Preference<Boolean> = preferenceStore.getBoolean("pref_paged_library_browsing", false)
+
     val updateCategories: Preference<Set<String>> = preferenceStore.getStringSet(
         LIBRARY_UPDATE_CATEGORIES_PREF_KEY,
         emptySet(),
