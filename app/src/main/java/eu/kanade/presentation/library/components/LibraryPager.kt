@@ -39,6 +39,7 @@ fun LibraryPager(
     getCategoryForPage: (Int) -> Category,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    getRowsForPagedBrowsing: () -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
     onClickManga: (Category, LibraryManga) -> Unit,
     onLongClickManga: (Category, LibraryManga) -> Unit,
@@ -78,12 +79,14 @@ fun LibraryPager(
 
         val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
         val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
+        val manualRows by remember { getRowsForPagedBrowsing() }
 
         when (displayMode) {
             LibraryDisplayMode.List -> {
                 LibraryList(
                     items = items,
                     pagedBrowsing = pagedBrowsing,
+                    manualRows = manualRows,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,
@@ -99,6 +102,7 @@ fun LibraryPager(
                     showTitle = displayMode is LibraryDisplayMode.CompactGrid,
                     columns = columns,
                     pagedBrowsing = pagedBrowsing,
+                    manualRows = manualRows,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,
@@ -113,6 +117,7 @@ fun LibraryPager(
                     items = items,
                     columns = columns,
                     pagedBrowsing = pagedBrowsing,
+                    manualRows = manualRows,
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClickManga,

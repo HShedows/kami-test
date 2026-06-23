@@ -213,6 +213,7 @@ data object LibraryTab : Tab {
                         getItemCountForCategory = { state.getItemCountForCategory(it) },
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
+                        getRowsForPagedBrowsing = { screenModel.getRowsForPagedBrowsing() },
                         getItemsForCategory = { state.getItemsForCategory(it) },
                     )
                 }

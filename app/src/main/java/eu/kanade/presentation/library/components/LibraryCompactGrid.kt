@@ -16,6 +16,7 @@ internal fun LibraryCompactGrid(
     showTitle: Boolean,
     columns: Int,
     pagedBrowsing: Boolean,
+    manualRows: Int,
     contentPadding: PaddingValues,
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
@@ -64,6 +65,7 @@ internal fun LibraryCompactGrid(
         PagedLibraryGrid(
             items = items,
             columns = columns,
+            manualRows = manualRows,
             contentPadding = contentPadding,
             cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) + 8.dp },
             cell = cell,

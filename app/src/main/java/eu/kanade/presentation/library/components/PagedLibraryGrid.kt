@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.Dp
  * while paged browsing is enabled.
  *
  * @param columns number of columns per page. Use 1 for a list layout.
+ * @param manualRows when greater than 0, overrides the auto-fit row count
+ *   with this exact number of rows per page (the "Items per column" slider).
+ *   0 means auto: fit as many rows as the screen height allows.
  * @param cellHeightForWidth given the width a single cell will actually be
  *   rendered at (after dividing available width across [columns] and
  *   subtracting grid spacing), return that cell's real rendered height.
@@ -41,6 +44,7 @@ import androidx.compose.ui.unit.Dp
 internal fun <T> PagedLibraryGrid(
     items: List<T>,
     columns: Int,
+    manualRows: Int,
     contentPadding: PaddingValues,
     cellHeightForWidth: (cellWidth: Dp) -> Dp,
     cell: @Composable (T) -> Unit,
@@ -59,13 +63,17 @@ internal fun <T> PagedLibraryGrid(
             contentPadding.calculateBottomPadding()
 
         val cellWidth = (availableWidth - horizontalSpacing * (safeColumns - 1)) / safeColumns
-        val rowHeight = cellHeightForWidth(cellWidth)
 
         // How many full rows fit, accounting for the gap between rows too:
         // n rows take n*rowHeight + (n-1)*spacing of vertical space.
-        val rowsPerPage = ((availableHeight + verticalSpacing) / (rowHeight + verticalSpacing))
-            .toInt()
-            .coerceAtLeast(1)
+        val rowsPerPage = if (manualRows > 0) {
+            manualRows
+        } else {
+            val rowHeight = cellHeightForWidth(cellWidth)
+            ((availableHeight + verticalSpacing) / (rowHeight + verticalSpacing))
+                .toInt()
+                .coerceAtLeast(1)
+        }
         val pageSize = (safeColumns * rowsPerPage).coerceAtLeast(1)
         val pages = remember(items, pageSize) { items.chunked(pageSize) }
         val pageCount = pages.size.coerceAtLeast(1)

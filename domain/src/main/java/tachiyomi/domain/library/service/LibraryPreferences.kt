@@ -134,6 +134,9 @@ class LibraryPreferences(
 
     val pagedLibraryBrowsing: Preference<Boolean> = preferenceStore.getBoolean("pref_paged_library_browsing", false)
 
+    // 0 = auto (fit to screen height), like portraitColumns/landscapeColumns use 0 for auto.
+    val pagedLibraryRows: Preference<Int> = preferenceStore.getInt("pref_paged_library_rows", 0)
+
     val updateCategories: Preference<Set<String>> = preferenceStore.getStringSet(
         LIBRARY_UPDATE_CATEGORIES_PREF_KEY,
         emptySet(),

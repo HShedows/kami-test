@@ -15,6 +15,7 @@ internal fun LibraryComfortableGrid(
     items: List<LibraryItem>,
     columns: Int,
     pagedBrowsing: Boolean,
+    manualRows: Int,
     contentPadding: PaddingValues,
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
@@ -63,6 +64,7 @@ internal fun LibraryComfortableGrid(
         PagedLibraryGrid(
             items = items,
             columns = columns,
+            manualRows = manualRows,
             contentPadding = contentPadding,
             cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) + 8.dp + 44.dp },
             cell = cell,

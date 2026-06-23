@@ -17,6 +17,7 @@ import tachiyomi.presentation.core.util.plus
 internal fun LibraryList(
     items: List<LibraryItem>,
     pagedBrowsing: Boolean,
+    manualRows: Int,
     contentPadding: PaddingValues,
     selection: Set<Long>,
     onClick: (LibraryManga) -> Unit,
@@ -61,6 +62,7 @@ internal fun LibraryList(
         PagedLibraryGrid(
             items = items,
             columns = 1,
+            manualRows = manualRows,
             contentPadding = contentPadding,
             cellHeightForWidth = { 56.dp },
             cell = cell,

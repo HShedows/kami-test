@@ -290,6 +290,24 @@ private fun ColumnScope.DisplayPage(
         pref = screenModel.libraryPreferences.pagedLibraryBrowsing,
     )
 
+    val pagedBrowsing by screenModel.libraryPreferences.pagedLibraryBrowsing.collectAsState()
+    if (pagedBrowsing) {
+        val rowsPreference = screenModel.libraryPreferences.pagedLibraryRows
+        val rows by rowsPreference.collectAsState()
+        SliderItem(
+            value = rows,
+            valueRange = 0..10,
+            label = stringResource(MR.strings.pref_library_rows_paged),
+            valueString = if (rows > 0) {
+                rows.toString()
+            } else {
+                stringResource(MR.strings.label_auto)
+            },
+            onChange = rowsPreference::set,
+            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+    }
+
     HeadingItem(MR.strings.tabs_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_show_tabs),

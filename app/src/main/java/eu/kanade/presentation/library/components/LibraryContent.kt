@@ -45,6 +45,7 @@ fun LibraryContent(
     getItemCountForCategory: (Category) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    getRowsForPagedBrowsing: () -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
 ) {
     Column(
@@ -102,6 +103,7 @@ fun LibraryContent(
                 getCategoryForPage = { page -> categories[page] },
                 getDisplayMode = getDisplayMode,
                 getColumnsForOrientation = getColumnsForOrientation,
+                getRowsForPagedBrowsing = getRowsForPagedBrowsing,
                 getItemsForCategory = getItemsForCategory,
                 onClickManga = { category, manga ->
                     if (selection.isNotEmpty()) {
