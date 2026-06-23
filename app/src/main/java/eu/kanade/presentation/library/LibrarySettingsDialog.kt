@@ -229,6 +229,9 @@ private fun ColumnScope.DisplayPage(
     screenModel: LibrarySettingsScreenModel,
 ) {
     val displayMode by screenModel.libraryPreferences.displayMode.collectAsState()
+    val pagedBrowsingPreference = screenModel.libraryPreferences.pagedLibraryBrowsing
+    val pagedBrowsing by pagedBrowsingPreference.collectAsState()
+
     SettingsChipRow(MR.strings.action_display_mode) {
         displayModes.map { (titleRes, mode) ->
             FilterChip(
@@ -237,6 +240,11 @@ private fun ColumnScope.DisplayPage(
                 label = { Text(stringResource(titleRes)) },
             )
         }
+        FilterChip(
+            selected = pagedBrowsing,
+            onClick = { pagedBrowsingPreference.set(!pagedBrowsing) },
+            label = { Text(stringResource(MR.strings.action_display_paged_browsing)) },
+        )
     }
 
     if (displayMode != LibraryDisplayMode.List) {
@@ -264,6 +272,23 @@ private fun ColumnScope.DisplayPage(
         )
     }
 
+    if (pagedBrowsing) {
+        val rowsPreference = screenModel.libraryPreferences.pagedLibraryRows
+        val rows by rowsPreference.collectAsState()
+        SliderItem(
+            value = rows,
+            valueRange = 0..10,
+            label = stringResource(MR.strings.pref_library_rows_paged),
+            valueString = if (rows > 0) {
+                rows.toString()
+            } else {
+                stringResource(MR.strings.label_auto)
+            },
+            onChange = rowsPreference::set,
+            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        )
+    }
+
     HeadingItem(MR.strings.overlay_header)
     CheckboxItem(
         label = stringResource(MR.strings.action_display_download_badge),
@@ -285,28 +310,6 @@ private fun ColumnScope.DisplayPage(
         label = stringResource(MR.strings.action_display_show_continue_reading_button),
         pref = screenModel.libraryPreferences.showContinueReadingButton,
     )
-    CheckboxItem(
-        label = stringResource(MR.strings.action_display_paged_browsing),
-        pref = screenModel.libraryPreferences.pagedLibraryBrowsing,
-    )
-
-    val pagedBrowsing by screenModel.libraryPreferences.pagedLibraryBrowsing.collectAsState()
-    if (pagedBrowsing) {
-        val rowsPreference = screenModel.libraryPreferences.pagedLibraryRows
-        val rows by rowsPreference.collectAsState()
-        SliderItem(
-            value = rows,
-            valueRange = 0..10,
-            label = stringResource(MR.strings.pref_library_rows_paged),
-            valueString = if (rows > 0) {
-                rows.toString()
-            } else {
-                stringResource(MR.strings.label_auto)
-            },
-            onChange = rowsPreference::set,
-            pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        )
-    }
 
     HeadingItem(MR.strings.tabs_header)
     CheckboxItem(
