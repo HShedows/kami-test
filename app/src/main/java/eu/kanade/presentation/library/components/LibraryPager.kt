@@ -1,12 +1,14 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.rememberCoroutineScope
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import tachiyomi.domain.category.model.Category
@@ -44,11 +47,22 @@ fun LibraryPager(
     onClickManga: (Category, LibraryManga) -> Unit,
     onLongClickManga: (Category, LibraryManga) -> Unit,
     onClickContinueReading: ((LibraryManga) -> Unit)?,
+    categories: List<Category>,
+    onSelectCategory: (Int) -> Unit,
+    showHopper: Boolean,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
         state = state,
         verticalAlignment = Alignment.Top,
+        flingBehavior = if (pagedBrowsing) {
+            PagerDefaults.flingBehavior(
+                state = state,
+                snapAnimationSpec = snap(),
+            )
+        } else {
+            PagerDefaults.flingBehavior(state = state)
+        },
     ) { page ->
         if (page !in ((state.currentPage - 1)..(state.currentPage + 1))) {
             // To make sure only one offscreen page is being composed
@@ -94,6 +108,10 @@ fun LibraryPager(
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    categories = categories,
+                    categoryIndex = page,
+                    onSelectCategory = onSelectCategory,
+                    showHopper = showHopper,
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
@@ -110,6 +128,10 @@ fun LibraryPager(
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    categories = categories,
+                    categoryIndex = page,
+                    onSelectCategory = onSelectCategory,
+                    showHopper = showHopper,
                 )
             }
             LibraryDisplayMode.ComfortableGrid -> {
@@ -125,6 +147,10 @@ fun LibraryPager(
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    categories = categories,
+                    categoryIndex = page,
+                    onSelectCategory = onSelectCategory,
+                    showHopper = showHopper,
                 )
             }
         }

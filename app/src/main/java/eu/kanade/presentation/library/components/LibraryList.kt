@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.library.LibraryItem
+import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.MangaCover
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -25,6 +26,10 @@ internal fun LibraryList(
     onClickContinueReading: ((LibraryManga) -> Unit)?,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
+    categories: List<Category>,
+    categoryIndex: Int,
+    onSelectCategory: (Int) -> Unit,
+    showHopper: Boolean,
 ) {
     val cell: @Composable (LibraryItem) -> Unit = { libraryItem ->
         val manga = libraryItem.libraryManga.manga
@@ -66,6 +71,10 @@ internal fun LibraryList(
             contentPadding = contentPadding,
             cellHeightForWidth = { 56.dp },
             cell = cell,
+            categories = categories,
+            categoryIndex = categoryIndex,
+            onSelectCategory = onSelectCategory,
+            showHopper = showHopper,
         )
         return
     }

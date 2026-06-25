@@ -134,6 +134,8 @@ class LibraryPreferences(
 
     val pagedLibraryBrowsing: Preference<Boolean> = preferenceStore.getBoolean("pref_paged_library_browsing", false)
 
+    val showCategoryHopper: Preference<Boolean> = preferenceStore.getBoolean("display_category_hopper", true)
+
     // 0 = auto (fit to screen height), like portraitColumns/landscapeColumns use 0 for auto.
     val pagedLibraryRows: Preference<Int> = preferenceStore.getInt("pref_paged_library_rows", 0)
 

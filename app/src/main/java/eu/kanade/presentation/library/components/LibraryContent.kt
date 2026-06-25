@@ -1,9 +1,12 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -23,6 +26,10 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.presentation.core.components.material.PullRefresh
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.presentation.core.util.collectAsState
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -48,34 +55,44 @@ fun LibraryContent(
     getRowsForPagedBrowsing: () -> PreferenceMutableState<Int>,
     getItemsForCategory: (Category) -> List<LibraryItem>,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+    val showingTabs = showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)
+
     Column(
-        modifier = Modifier.padding(
-            top = contentPadding.calculateTopPadding(),
-            start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-            end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-        ),
+        modifier = Modifier.fillMaxSize(),
     ) {
         val pagerState = rememberPagerState(currentPage) { categories.size }
 
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
 
-        if (showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)) {
+        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val showHopper by libraryPreferences.showCategoryHopper.collectAsState()
+
+        if (showingTabs) {
             LaunchedEffect(categories) {
                 if (categories.size <= pagerState.currentPage) {
                     pagerState.scrollToPage(categories.size - 1)
                 }
             }
-            LibraryTabs(
-                categories = categories,
-                pagerState = pagerState,
-                getItemCountForCategory = getItemCountForCategory,
-                onTabItemClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(it)
-                    }
-                },
-            )
+            Box(
+                modifier = Modifier.padding(
+                    top = contentPadding.calculateTopPadding(),
+                    start = contentPadding.calculateStartPadding(layoutDirection),
+                    end = contentPadding.calculateEndPadding(layoutDirection),
+                ),
+            ) {
+                LibraryTabs(
+                    categories = categories,
+                    pagerState = pagerState,
+                    getItemCountForCategory = getItemCountForCategory,
+                    onTabItemClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(it)
+                        }
+                    },
+                )
+            }
         }
 
         PullRefresh(
@@ -94,7 +111,15 @@ fun LibraryContent(
         ) {
             LibraryPager(
                 state = pagerState,
-                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                contentPadding = if (showingTabs) {
+                    PaddingValues(
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    )
+                } else {
+                    contentPadding
+                },
                 hasActiveFilters = hasActiveFilters,
                 pagedBrowsing = pagedBrowsing,
                 selection = selection,
@@ -114,6 +139,13 @@ fun LibraryContent(
                 },
                 onLongClickManga = onToggleRangeSelection,
                 onClickContinueReading = onContinueReadingClicked,
+                categories = categories,
+                onSelectCategory = {
+                    scope.launch {
+                        pagerState.animateScrollToPage(it)
+                    }
+                },
+                showHopper = showHopper,
             )
         }
 

@@ -240,12 +240,17 @@ private fun ColumnScope.DisplayPage(
                 label = { Text(stringResource(titleRes)) },
             )
         }
-        FilterChip(
-            selected = pagedBrowsing,
-            onClick = { pagedBrowsingPreference.set(!pagedBrowsing) },
-            label = { Text(stringResource(MR.strings.action_display_paged_browsing)) },
-        )
     }
+
+    CheckboxItem(
+        label = stringResource(MR.strings.action_display_paged_browsing),
+        pref = pagedBrowsingPreference,
+    )
+
+    CheckboxItem(
+        label = "Show category hopper",
+        pref = screenModel.libraryPreferences.showCategoryHopper,
+    )
 
     if (displayMode != LibraryDisplayMode.List) {
         val configuration = LocalConfiguration.current
