@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,11 +24,11 @@ import kotlinx.coroutines.launch
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.presentation.core.components.material.PullRefresh
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.presentation.core.util.collectAsState
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -56,7 +55,8 @@ fun LibraryContent(
     getItemsForCategory: (Category) -> List<LibraryItem>,
 ) {
     val layoutDirection = LocalLayoutDirection.current
-    val showingTabs = showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)
+    val showingTabs =
+        showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)
 
     Column(
         modifier = Modifier.fillMaxSize(),

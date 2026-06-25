@@ -1,7 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.animation.core.snap
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -121,10 +120,18 @@ internal fun <T> PagedLibraryGrid(
             if (heightPerWidth > 0) {
                 // Linear model: rowHeight = cellWidth * heightPerWidth + extraHeight
                 // availableHeight >= manualRows * (w * hpw + extra) + (manualRows - 1) * minVerticalSpacing
-                val maxHeightConstraint = availableHeight - (extraHeight * manualRows) - (minVerticalSpacing * (manualRows - 1))
+                val maxHeightConstraint =
+                    availableHeight - (extraHeight * manualRows) - (minVerticalSpacing * (manualRows - 1))
                 val heightLimitedCellWidth = (maxHeightConstraint / (manualRows * heightPerWidth)).coerceAtLeast(0.dp)
 
-                finalCellWidth = if (heightLimitedCellWidth < widthLimitedCellWidth) heightLimitedCellWidth else widthLimitedCellWidth
+                finalCellWidth =
+                    if (heightLimitedCellWidth <
+                        widthLimitedCellWidth
+                    ) {
+                        heightLimitedCellWidth
+                    } else {
+                        widthLimitedCellWidth
+                    }
                 finalCellHeight = cellHeightForWidth(finalCellWidth)
             } else {
                 // Constant height layout (e.g. List)
@@ -160,7 +167,7 @@ internal fun <T> PagedLibraryGrid(
         val pages = remember(items, pageSize) { items.chunked(pageSize) }
         val pageCount = pages.size.coerceAtLeast(1)
 
-        val pagerState = rememberPagerState(pageCount = { pageCount })
+        val pagerState = rememberPagerState { pageCount }
         val scope = rememberCoroutineScope()
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -211,14 +218,14 @@ internal fun <T> PagedLibraryGrid(
                     onSelectCategory = onSelectCategory,
                     onPrevPage = {
                         scope.launch {
-                            pagerState.currentPage.minus(1).takeIf { it >= 0 }?.let {
+                            (pagerState.currentPage - 1).takeIf { it >= 0 }?.let {
                                 pagerState.scrollToPage(it)
                             }
                         }
                     },
                     onNextPage = {
                         scope.launch {
-                            pagerState.currentPage.plus(1).takeIf { it < pageCount }?.let {
+                            (pagerState.currentPage + 1).takeIf { it < pageCount }?.let {
                                 pagerState.scrollToPage(it)
                             }
                         }
@@ -243,7 +250,7 @@ private fun CategoryHopper(
     onNextPage: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(value = false) }
 
     Surface(
         modifier = modifier,
@@ -289,7 +296,7 @@ private fun CategoryHopper(
                                         MaterialTheme.colorScheme.primary
                                     } else {
                                         MaterialTheme.colorScheme.onSurface
-                                    }
+                                    },
                                 )
                             },
                             onClick = {
