@@ -1,7 +1,7 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,13 +22,16 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,13 +43,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import eu.kanade.presentation.category.visualName
 import kotlinx.coroutines.launch
 import tachiyomi.domain.category.model.Category
+import kotlin.math.roundToInt
 
 /**
  * Renders [items] as fixed, non-scrolling pages instead of one continuously
@@ -175,10 +189,7 @@ internal fun <T> PagedLibraryGrid(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
                 verticalAlignment = Alignment.Top,
-                flingBehavior = PagerDefaults.flingBehavior(
-                    state = pagerState,
-                    snapAnimationSpec = snap(),
-                ),
+                userScrollEnabled = false,
             ) { page ->
                 val pageItems = pages.getOrElse(page) { emptyList() }
                 LazyVerticalGrid(
@@ -230,9 +241,9 @@ internal fun <T> PagedLibraryGrid(
                             }
                         }
                     },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = contentPadding.calculateBottomPadding() + 8.dp, end = 16.dp),
+                    containerWidth = this@BoxWithConstraints.maxWidth,
+                    containerHeight = this@BoxWithConstraints.maxHeight,
+                    contentPadding = contentPadding,
                 )
             }
         }
@@ -248,40 +259,105 @@ private fun CategoryHopper(
     onSelectCategory: (Int) -> Unit,
     onPrevPage: () -> Unit,
     onNextPage: () -> Unit,
-    modifier: Modifier = Modifier,
+    containerWidth: Dp,
+    containerHeight: Dp,
+    contentPadding: PaddingValues,
 ) {
-    var expanded by remember { mutableStateOf(value = false) }
+    var expanded by remember { mutableStateOf(false) }
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+
+    // Bounds the hopper has to stay within, in pixels: the visible page
+    // area minus the bar insets (so it can't be dragged behind the top or
+    // bottom bars, or off either side of the screen).
+    val boundsPx = with(density) {
+        IntSize(containerWidth.roundToPx(), containerHeight.roundToPx())
+    }
+    val topInsetPx = with(density) { contentPadding.calculateTopPadding().roundToPx() }
+    val bottomInsetPx = with(density) { contentPadding.calculateBottomPadding().roundToPx() }
+    val startInsetPx = with(density) { contentPadding.calculateStartPadding(layoutDirection).roundToPx() }
+    val endInsetPx = with(density) { contentPadding.calculateEndPadding(layoutDirection).roundToPx() }
+
+    var hopperSizePx by remember { mutableStateOf(IntSize.Zero) }
+
+    // Default resting spot: bottom-end corner, with a small margin — same
+    // spot it used to be pinned to, just now a starting point instead of a
+    // hard lock. Recomputed once we know the hopper's real measured size.
+    var offsetPx by remember { mutableStateOf<Offset?>(null) }
+    val marginPx = with(density) { 16.dp.roundToPx() }
+
+    if (offsetPx == null && hopperSizePx != IntSize.Zero) {
+        offsetPx = Offset(
+            x = (boundsPx.width - endInsetPx - hopperSizePx.width - marginPx).toFloat(),
+            y = (boundsPx.height - bottomInsetPx - hopperSizePx.height - marginPx).toFloat(),
+        )
+    }
+
+    val currentOffset = offsetPx ?: Offset(
+        (boundsPx.width - hopperSizePx.width).toFloat(),
+        (boundsPx.height - hopperSizePx.height).toFloat(),
+    )
+
+    fun clamp(raw: Offset): Offset {
+        val minX = startInsetPx.toFloat()
+        val maxX = (boundsPx.width - endInsetPx - hopperSizePx.width).toFloat().coerceAtLeast(minX)
+        val minY = topInsetPx.toFloat()
+        val maxY = (boundsPx.height - bottomInsetPx - hopperSizePx.height).toFloat().coerceAtLeast(minY)
+        return Offset(
+            x = raw.x.coerceIn(minX, maxX),
+            y = raw.y.coerceIn(minY, maxY),
+        )
+    }
 
     Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+        modifier = Modifier
+            .onSizeChanged { hopperSizePx = it }
+            .offset { IntOffset(currentOffset.x.roundToInt(), currentOffset.y.roundToInt()) }
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    offsetPx = clamp(currentOffset + dragAmount)
+                }
+            },
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
         tonalElevation = 3.dp,
-        shadowElevation = 2.dp,
+        shadowElevation = 6.dp,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-        ) {
-            IconButton(
-                onClick = onPrevPage,
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HopperIconButton(
+                icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = "Previous page",
                 enabled = currentPage > 0,
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = null,
-                )
-            }
+                onClick = onPrevPage,
+            )
 
             Box {
-                Text(
-                    text = "Page ${currentPage + 1} of $pageCount",
-                    modifier = Modifier
-                        .clickable { expanded = true }
-                        .padding(horizontal = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                HopperIconButton(
+                    icon = Icons.Outlined.Label,
+                    contentDescription = "Jump to category",
+                    enabled = true,
+                    onClick = { expanded = true },
                 )
+
+                // Small page-count badge so the icon-based pill (matching
+                // the reference design) doesn't lose the "page X of Y"
+                // info entirely.
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 2.dp, bottom = 2.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary,
+                ) {
+                    Text(
+                        text = "${currentPage + 1}/$pageCount",
+                        modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
 
                 DropdownMenu(
                     expanded = expanded,
@@ -308,15 +384,40 @@ private fun CategoryHopper(
                 }
             }
 
-            IconButton(
-                onClick = onNextPage,
+            HopperIconButton(
+                icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Next page",
                 enabled = currentPage < pageCount - 1,
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                )
-            }
+                onClick = onNextPage,
+            )
         }
+    }
+}
+
+/**
+ * Matches Yokai's `rounded_category_hopper.xml` proportions: a 24dp icon
+ * with 12dp padding on all sides (48dp total tap target), tinted to
+ * contrast against the pill's [Surface] color.
+ */
+@Composable
+private fun HopperIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = LocalContentColor.current.copy(alpha = if (enabled) 1f else 0.38f),
+            modifier = Modifier.size(24.dp),
+        )
     }
 }

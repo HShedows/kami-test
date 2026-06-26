@@ -1,7 +1,6 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,14 +54,6 @@ fun LibraryPager(
         modifier = Modifier.fillMaxSize(),
         state = state,
         verticalAlignment = Alignment.Top,
-        flingBehavior = if (pagedBrowsing) {
-            PagerDefaults.flingBehavior(
-                state = state,
-                snapAnimationSpec = snap(),
-            )
-        } else {
-            PagerDefaults.flingBehavior(state = state)
-        },
     ) { page ->
         if (page !in ((state.currentPage - 1)..(state.currentPage + 1))) {
             // To make sure only one offscreen page is being composed
