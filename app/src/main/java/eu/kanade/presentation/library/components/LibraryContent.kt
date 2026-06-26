@@ -56,7 +56,7 @@ fun LibraryContent(
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val showingTabs =
-        showPageTabs && categories.isNotEmpty() && (categories.size > 1 || !categories.first().isSystemCategory)
+        showPageTabs && categories.isNotEmpty() && (categories.size > 1 || (!categories.first().isSystemCategory))
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -64,7 +64,7 @@ fun LibraryContent(
         val pagerState = rememberPagerState(currentPage) { categories.size }
 
         val scope = rememberCoroutineScope()
-        var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
+        var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(value = false) }
 
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
         val showHopper by libraryPreferences.showCategoryHopper.collectAsState()
@@ -86,12 +86,11 @@ fun LibraryContent(
                     categories = categories,
                     pagerState = pagerState,
                     getItemCountForCategory = getItemCountForCategory,
-                    onTabItemClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(it)
-                        }
-                    },
-                )
+                ) {
+                    scope.launch {
+                        pagerState.animateScrollToPage(it)
+                    }
+                }
             }
         }
 

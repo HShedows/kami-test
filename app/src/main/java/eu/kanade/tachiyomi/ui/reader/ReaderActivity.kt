@@ -124,15 +124,15 @@ import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
-import java.io.ByteArrayOutputStream
-import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.seconds
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.ByteArrayOutputStream
+import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.seconds
 
 class ReaderActivity : BaseActivity() {
 

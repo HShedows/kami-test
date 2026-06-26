@@ -118,7 +118,7 @@ internal fun <T> PagedLibraryGrid(
             (gridPadding * 2)
 
         // 1. Calculate the base cell width based on available horizontal space.
-        val widthLimitedCellWidth = (availableWidth - horizontalSpacing * (safeColumns - 1)) / safeColumns
+        val widthLimitedCellWidth = (availableWidth - (horizontalSpacing * (safeColumns - 1))) / safeColumns
 
         val finalCellWidth: Dp
         val finalCellHeight: Dp
@@ -263,7 +263,7 @@ private fun CategoryHopper(
     containerHeight: Dp,
     contentPadding: PaddingValues,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(value = false) }
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val scope = rememberCoroutineScope()
@@ -321,19 +321,18 @@ private fun CategoryHopper(
                     onDragCancel = {
                         scope.launch { offsetX.animateTo(nearestAnchor(offsetX.value)) }
                     },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        // Reading/writing offsetX.value directly (not a
-                        // separately-captured local val) is what makes this
-                        // track live drag deltas correctly — this lambda is
-                        // only ever created once (pointerInput key = Unit),
-                        // so anything captured as a plain val here would be
-                        // frozen at that first frame instead of reflecting
-                        // the latest dragged position.
-                        val newX = (offsetX.value + dragAmount).coerceIn(leftX(), rightX())
-                        scope.launch { offsetX.snapTo(newX) }
-                    },
-                )
+                ) { change, dragAmount ->
+                    change.consume()
+                    // Reading/writing offsetX.value directly (not a
+                    // separately-captured local val) is what makes this
+                    // track live drag deltas correctly — this lambda is
+                    // only ever created once (pointerInput key = Unit),
+                    // so anything captured as a plain val here would be
+                    // frozen at that first frame instead of reflecting
+                    // the latest dragged position.
+                    val newX = (offsetX.value + dragAmount).coerceIn(leftX(), rightX())
+                    scope.launch { offsetX.snapTo(newX) }
+                }
             },
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
