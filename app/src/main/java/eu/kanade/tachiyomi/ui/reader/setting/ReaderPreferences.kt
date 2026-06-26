@@ -219,6 +219,7 @@ class ReaderPreferences(
             MR.strings.kindlish_nav,
             MR.strings.edge_nav,
             MR.strings.right_and_left_nav,
+            MR.strings.right_split_nav,
             MR.strings.disabled_nav,
         )
 

@@ -1,7 +1,8 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,14 +21,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Label
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -36,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -266,6 +266,7 @@ private fun CategoryHopper(
     var expanded by remember { mutableStateOf(false) }
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    val scope = rememberCoroutineScope()
 
     // Bounds the hopper has to stay within, in pixels: the visible page
     // area minus the bar insets (so it can't be dragged behind the top or
@@ -273,51 +274,66 @@ private fun CategoryHopper(
     val boundsPx = with(density) {
         IntSize(containerWidth.roundToPx(), containerHeight.roundToPx())
     }
-    val topInsetPx = with(density) { contentPadding.calculateTopPadding().roundToPx() }
     val bottomInsetPx = with(density) { contentPadding.calculateBottomPadding().roundToPx() }
     val startInsetPx = with(density) { contentPadding.calculateStartPadding(layoutDirection).roundToPx() }
     val endInsetPx = with(density) { contentPadding.calculateEndPadding(layoutDirection).roundToPx() }
+    val marginPx = with(density) { 16.dp.roundToPx() }
 
     var hopperSizePx by remember { mutableStateOf(IntSize.Zero) }
 
-    // Default resting spot: bottom-end corner, with a small margin — same
-    // spot it used to be pinned to, just now a starting point instead of a
-    // hard lock. Recomputed once we know the hopper's real measured size.
-    var offsetPx by remember { mutableStateOf<Offset?>(null) }
-    val marginPx = with(density) { 16.dp.roundToPx() }
+    // Only the horizontal position is draggable, snapping to one of three
+    // resting spots on release — matching Yokai's hopper. Vertically it
+    // always stays pinned just above the bottom inset.
+    val offsetX = remember { Animatable(0f) }
+    var initialized by remember { mutableStateOf(false) }
 
-    if (offsetPx == null && hopperSizePx != IntSize.Zero) {
-        offsetPx = Offset(
-            x = (boundsPx.width - endInsetPx - hopperSizePx.width - marginPx).toFloat(),
-            y = (boundsPx.height - bottomInsetPx - hopperSizePx.height - marginPx).toFloat(),
-        )
-    }
+    // Computed as functions (not plain vals) so they read hopperSizePx
+    // live at call time — the drag callbacks below are set up once
+    // (pointerInput key = Unit) and never recreated, so anything baked in
+    // as an already-evaluated val would stay frozen at whatever
+    // hopperSizePx happened to be on that first frame (likely still
+    // IntSize.Zero, before the real size is measured).
+    fun leftX() = (startInsetPx + marginPx).toFloat()
+    fun rightX() = (boundsPx.width - endInsetPx - hopperSizePx.width - marginPx).toFloat().coerceAtLeast(leftX())
+    fun centerX() = ((boundsPx.width - hopperSizePx.width) / 2f).coerceIn(leftX(), rightX())
+    fun nearestAnchor(x: Float): Float =
+        listOf(leftX(), centerX(), rightX()).minByOrNull { kotlin.math.abs(it - x) } ?: x
 
-    val currentOffset = offsetPx ?: Offset(
-        (boundsPx.width - hopperSizePx.width).toFloat(),
-        (boundsPx.height - hopperSizePx.height).toFloat(),
-    )
+    val restingY = (boundsPx.height - bottomInsetPx - hopperSizePx.height - marginPx).toFloat()
 
-    fun clamp(raw: Offset): Offset {
-        val minX = startInsetPx.toFloat()
-        val maxX = (boundsPx.width - endInsetPx - hopperSizePx.width).toFloat().coerceAtLeast(minX)
-        val minY = topInsetPx.toFloat()
-        val maxY = (boundsPx.height - bottomInsetPx - hopperSizePx.height).toFloat().coerceAtLeast(minY)
-        return Offset(
-            x = raw.x.coerceIn(minX, maxX),
-            y = raw.y.coerceIn(minY, maxY),
-        )
+    // Start docked at the right, once we know the hopper's real size.
+    LaunchedEffect(hopperSizePx) {
+        if (!initialized && hopperSizePx != IntSize.Zero) {
+            initialized = true
+            offsetX.snapTo(rightX())
+        }
     }
 
     Surface(
         modifier = Modifier
             .onSizeChanged { hopperSizePx = it }
-            .offset { IntOffset(currentOffset.x.roundToInt(), currentOffset.y.roundToInt()) }
+            .offset { IntOffset(offsetX.value.roundToInt(), restingY.roundToInt()) }
             .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    offsetPx = clamp(currentOffset + dragAmount)
-                }
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        scope.launch { offsetX.animateTo(nearestAnchor(offsetX.value)) }
+                    },
+                    onDragCancel = {
+                        scope.launch { offsetX.animateTo(nearestAnchor(offsetX.value)) }
+                    },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        // Reading/writing offsetX.value directly (not a
+                        // separately-captured local val) is what makes this
+                        // track live drag deltas correctly — this lambda is
+                        // only ever created once (pointerInput key = Unit),
+                        // so anything captured as a plain val here would be
+                        // frozen at that first frame instead of reflecting
+                        // the latest dragged position.
+                        val newX = (offsetX.value + dragAmount).coerceIn(leftX(), rightX())
+                        scope.launch { offsetX.snapTo(newX) }
+                    },
+                )
             },
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -335,7 +351,7 @@ private fun CategoryHopper(
 
             Box {
                 HopperIconButton(
-                    icon = Icons.Outlined.Label,
+                    icon = Icons.AutoMirrored.Outlined.Label,
                     contentDescription = "Jump to category",
                     enabled = true,
                     onClick = { expanded = true },

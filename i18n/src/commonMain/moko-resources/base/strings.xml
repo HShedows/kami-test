@@ -450,6 +450,7 @@
     <string name="pref_viewer_type">Default reading mode</string>
     <string name="l_nav">L shaped</string>
     <string name="kindlish_nav">Kindle-ish</string>
+    <string name="right_split_nav">Split Right</string>
     <string name="edge_nav">Edge</string>
     <string name="right_and_left_nav">Right and Left</string>
     <string name="disabled_nav">Disabled</string>

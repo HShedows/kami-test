@@ -205,7 +205,7 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
 }
 
 @Composable
-private fun ColumnScope.TapZonesItems(
+private fun TapZonesItems(
     selected: Int,
     onSelect: (Int) -> Unit,
     invertMode: ReaderPreferences.TappingInvertMode,
@@ -221,7 +221,7 @@ private fun ColumnScope.TapZonesItems(
         }
     }
 
-    if (selected != 5) {
+    if (selected != 6) {
         SettingsChipRow(MR.strings.pref_read_with_tapping_inverted) {
             ReaderPreferences.TappingInvertMode.entries.map {
                 FilterChip(
