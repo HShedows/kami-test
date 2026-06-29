@@ -53,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1028,6 +1029,15 @@ private fun BrightnessGestureLayer(
     var indicatorValue by remember { mutableIntStateOf(currentValue) }
     val density = LocalDensity.current
 
+    // Lets the long-lived gesture detector below see the latest
+    // `currentValue` (e.g. if brightness was changed by some other means
+    // between drags) without needing to restart the detector itself —
+    // restarting it is exactly what was causing the bug: keying
+    // pointerInput on currentValue meant every onValueChange() call
+    // (which flows back into currentValue on the next recomposition)
+    // cancelled and relaunched detectVerticalDragGestures mid-drag.
+    val latestValue by rememberUpdatedState(currentValue)
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -1038,17 +1048,33 @@ private fun BrightnessGestureLayer(
                 .width(48.dp)
                 .background(Transparent)
                 .align(Alignment.CenterStart)
-                .pointerInput(currentValue) {
+                .pointerInput(Unit) {
+                    // Plain local vars are fine here (not state) — this
+                    // whole block now only runs once for the lifetime of
+                    // this composable (key = Unit), so they persist
+                    // correctly across all the callbacks of every drag
+                    // gesture without needing to be remembered.
+                    var startingY = 0f
+                    var originalValue = 0
+
                     detectVerticalDragGestures(
-                        onDragStart = { showIndicator = true },
+                        onDragStart = { offset ->
+                            showIndicator = true
+                            startingY = offset.y
+                            originalValue = latestValue
+                            indicatorValue = originalValue
+                        },
                         onDragEnd = { showIndicator = false },
                         onDragCancel = { showIndicator = false },
-                        onVerticalDrag = { _, dragAmount ->
-                            val sensitivity = 0.5f // Pixels to brightness units
-                            val delta = -(dragAmount / density.density) * sensitivity
-                            val newValue = (indicatorValue + delta)
-                                .coerceIn(-75f, 100f)
+                        onVerticalDrag = { change, _ ->
+                            // Total distance from where this drag started,
+                            // not an accumulation of per-frame deltas — avoids
+                            // any compounding rounding drift over a long drag.
+                            val sensitivity = 0.1f // brightness units per dp moved
+                            val deltaDp = (startingY - change.position.y) / density.density
+                            val newValue = (originalValue + deltaDp * sensitivity)
                                 .roundToInt()
+                                .coerceIn(0, 100)
 
                             if (newValue != indicatorValue) {
                                 indicatorValue = newValue
@@ -1097,7 +1123,7 @@ private fun BrightnessIndicator(value: Int) {
                     .background(White.copy(alpha = 0.3f), RoundedCornerShape(2.dp)),
                 contentAlignment = Alignment.BottomCenter,
             ) {
-                val progress = (value + 75) / 175f
+                val progress = (value) / 100f
                 Box(
                     modifier = Modifier
                         .fillMaxHeight(progress.coerceIn(0f, 1f))

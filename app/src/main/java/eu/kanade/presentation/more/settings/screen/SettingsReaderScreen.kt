@@ -229,7 +229,7 @@ object SettingsReaderScreen : SearchableSettings {
                     )
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
-                    enabled = navMode != 5,
+                    enabled = navMode != 6,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = imageScaleTypePref,
@@ -257,7 +257,7 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.navigateToPan,
                     title = stringResource(MR.strings.pref_navigate_pan),
-                    enabled = navMode != 5,
+                    enabled = navMode != 6,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = dualPageSplitPref,
@@ -324,7 +324,7 @@ object SettingsReaderScreen : SearchableSettings {
                     )
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
-                    enabled = navMode != 5,
+                    enabled = navMode != 6,
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = webtoonSidePadding,
