@@ -69,6 +69,9 @@ import uy.kohesive.injekt.api.get
 
 data object LibraryTab : Tab {
 
+    @Suppress("unused")
+    private fun readResolve(): Any = LibraryTab
+
     override val options: TabOptions
         @Composable
         get() {

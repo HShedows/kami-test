@@ -21,7 +21,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsBrowseScreen : SearchableSettings {
+data object SettingsBrowseScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsBrowseScreen
 
     @ReadOnlyComposable
     @Composable

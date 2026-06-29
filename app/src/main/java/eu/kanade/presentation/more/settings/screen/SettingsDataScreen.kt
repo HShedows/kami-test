@@ -76,7 +76,10 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsDataScreen : SearchableSettings {
+data object SettingsDataScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsDataScreen
 
     val restorePreferenceKeyString = MR.strings.label_backup
     const val HELP_URL = "https://mihon.app/docs/faq/storage"

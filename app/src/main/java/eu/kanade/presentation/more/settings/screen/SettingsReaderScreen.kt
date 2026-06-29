@@ -18,7 +18,10 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
 
-object SettingsReaderScreen : SearchableSettings {
+data object SettingsReaderScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsReaderScreen
 
     @ReadOnlyComposable
     @Composable
@@ -57,6 +60,10 @@ object SettingsReaderScreen : SearchableSettings {
             Preference.PreferenceItem.SwitchPreference(
                 preference = readerPref.pageTransitions,
                 title = stringResource(MR.strings.pref_page_transitions),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = readerPref.disableSwipeBetweenPages,
+                title = stringResource(MR.strings.pref_disable_swipe_between_pages),
             ),
             getDisplayGroup(readerPreferences = readerPref),
             getEInkGroup(readerPreferences = readerPref),

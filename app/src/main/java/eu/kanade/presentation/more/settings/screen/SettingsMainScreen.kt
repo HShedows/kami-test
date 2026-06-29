@@ -49,7 +49,10 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
-object SettingsMainScreen : Screen() {
+data object SettingsMainScreen : Screen() {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsMainScreen
 
     @Composable
     override fun Content() {

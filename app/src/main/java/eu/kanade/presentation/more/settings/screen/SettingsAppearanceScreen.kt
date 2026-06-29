@@ -26,7 +26,10 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 
-object SettingsAppearanceScreen : SearchableSettings {
+data object SettingsAppearanceScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsAppearanceScreen
 
     @ReadOnlyComposable
     @Composable

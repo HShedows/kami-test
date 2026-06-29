@@ -16,7 +16,10 @@ class ReaderPreferences(
 
     val pageTransitions: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_transitions_key", true)
 
-    val disableSwipeBetweenPages: Preference<Boolean> = preferenceStore.getBoolean("pref_disable_swipe_between_pages", false)
+    val disableSwipeBetweenPages: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_disable_swipe_between_pages",
+        false,
+    )
 
     val flashOnPageChange: Preference<Boolean> = preferenceStore.getBoolean("pref_reader_flash", false)
 

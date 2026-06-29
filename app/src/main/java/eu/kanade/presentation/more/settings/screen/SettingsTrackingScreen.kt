@@ -64,7 +64,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsTrackingScreen : SearchableSettings {
+data object SettingsTrackingScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsTrackingScreen
 
     @ReadOnlyComposable
     @Composable

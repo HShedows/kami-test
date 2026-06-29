@@ -20,7 +20,10 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsSecurityScreen : SearchableSettings {
+data object SettingsSecurityScreen : SearchableSettings {
+
+    @Suppress("unused")
+    private fun readResolve(): Any = SettingsSecurityScreen
 
     @ReadOnlyComposable
     @Composable
