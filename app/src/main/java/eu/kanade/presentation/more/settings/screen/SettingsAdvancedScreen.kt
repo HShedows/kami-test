@@ -155,7 +155,7 @@ data object SettingsAdvancedScreen : SearchableSettings {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 context.startActivity(intent)
-                            } catch (e: ActivityNotFoundException) {
+                            } catch (_: ActivityNotFoundException) {
                                 context.toast(MR.strings.battery_optimization_setting_activity_not_found)
                             }
                         } else {

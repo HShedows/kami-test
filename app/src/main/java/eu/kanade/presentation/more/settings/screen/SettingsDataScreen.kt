@@ -176,7 +176,7 @@ data object SettingsDataScreen : SearchableSettings {
             onClick = {
                 try {
                     pickStorageLocation.launch(null)
-                } catch (e: ActivityNotFoundException) {
+                } catch (_: ActivityNotFoundException) {
                     context.toast(MR.strings.file_picker_error)
                 }
             },
