@@ -71,7 +71,7 @@ internal fun LibraryComfortableGrid(
             columns = columns,
             manualRows = manualRows,
             contentPadding = contentPadding,
-            cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) + 8.dp + 44.dp },
+            cellHeightForWidth = { cellWidth -> (cellWidth * 1.5f) - 4.dp + 45.dp },
             cell = cell,
             categories = categories,
             categoryIndex = categoryIndex,

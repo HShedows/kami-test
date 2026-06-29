@@ -55,10 +55,36 @@ open class Pager(
     private var isGestureDetectorEnabled = true
 
     /**
+     * Whether swipe-to-change-page is currently enabled. When false, the
+     * pager's own paging/fling handling is bypassed entirely — but
+     * [dispatchTouchEvent] below still always feeds [gestureDetector]
+     * independently, so tap-zone navigation keeps working regardless.
+     */
+    private var isSwipeEnabled = true
+
+    /**
      * Dispatches a touch event.
      */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        val handled = super.dispatchTouchEvent(ev)
+        if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
+            // Defensive reset: something disabling this mid-gesture (e.g. a
+            // child ReaderButton, while pressed) should never be able to
+            // leave it stuck disabled across separate touch sequences —
+            // every new gesture starts with it enabled again regardless.
+            isGestureDetectorEnabled = true
+        }
+        // super.dispatchTouchEvent can throw if a child view's hierarchy
+        // mutates while a touch is in flight (e.g. the transition holder
+        // swapping its loading/loaded/error child views mid-gesture).
+        // Without this try/catch, such an exception would propagate out of
+        // this function entirely and skip the gestureDetector call below —
+        // silently breaking tap zones and menu-toggle with no visible crash.
+        val handled = try {
+            super.dispatchTouchEvent(ev)
+        } catch (e: Exception) {
+            android.util.Log.e("Pager", "dispatchTouchEvent threw, gesture detector would have been skipped without this catch", e)
+            false
+        }
         if (isGestureDetectorEnabled) {
             gestureDetector.onTouchEvent(ev)
         }
@@ -70,6 +96,7 @@ open class Pager(
      * views manipulate [requestDisallowInterceptTouchEvent].
      */
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        if (!isSwipeEnabled) return false
         return try {
             super.onInterceptTouchEvent(ev)
         } catch (e: IllegalArgumentException) {
@@ -82,6 +109,7 @@ open class Pager(
      * [requestDisallowInterceptTouchEvent].
      */
     override fun onTouchEvent(ev: MotionEvent): Boolean {
+        if (!isSwipeEnabled) return false
         return try {
             super.onTouchEvent(ev)
         } catch (e: NullPointerException) {
@@ -107,5 +135,13 @@ open class Pager(
      */
     fun setGestureDetectorEnabled(enabled: Boolean) {
         isGestureDetectorEnabled = enabled
+    }
+
+    /**
+     * Enables or disables swipe-to-change-page. Tap-zone navigation is
+     * unaffected either way.
+     */
+    fun setSwipeEnabled(enabled: Boolean) {
+        isSwipeEnabled = enabled
     }
 }
