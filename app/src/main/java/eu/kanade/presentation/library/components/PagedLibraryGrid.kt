@@ -100,7 +100,6 @@ internal fun <T> PagedLibraryGrid(
     onSelectCategory: (Int) -> Unit,
     showHopper: Boolean,
 ) {
-    val safeColumns = columns.coerceAtLeast(1)
     val layoutDirection = LocalLayoutDirection.current
     val horizontalSpacing = CommonMangaItemDefaults.GridHorizontalSpacer
     val minVerticalSpacing = CommonMangaItemDefaults.GridVerticalSpacer
@@ -116,6 +115,16 @@ internal fun <T> PagedLibraryGrid(
             contentPadding.calculateTopPadding() -
             contentPadding.calculateBottomPadding() -
             (gridPadding * 2)
+
+        // 0 == Auto: fit as many columns as width allows (same 128.dp minimum as LazyLibraryGrid).
+        val density = LocalDensity.current
+        val safeColumns = if (columns == 0) {
+            val availableWidthPx = with(density) { availableWidth.toPx() }
+            val minCellPx = with(density) { (128.dp + horizontalSpacing).toPx() }
+            (availableWidthPx / minCellPx).toInt().coerceAtLeast(1)
+        } else {
+            columns.coerceAtLeast(1)
+        }
 
         // 1. Calculate the base cell width based on available horizontal space.
         val widthLimitedCellWidth = (availableWidth - (horizontalSpacing * (safeColumns - 1))) / safeColumns
